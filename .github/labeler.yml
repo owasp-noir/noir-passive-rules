@@ -1,0 +1,8 @@
+rule-secrets:
+- changed-files:
+  - any-glob-to-any-file: 
+    - secrets/**
+
+ci:
+- changed-files:
+  - any-glob-to-any-file: .github/**
