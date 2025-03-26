@@ -27,7 +27,7 @@ jobs:
       with:
         fetch-depth: 2
     - name: Make revision
-      run: date +%s > last_change
+      run: date +%s > revision
     - name: Commit files
       run: |
         git config --local user.email "hahwul@gmail.com"
