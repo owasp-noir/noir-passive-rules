@@ -1,0 +1,41 @@
+---
+name: CI
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: manual run
+        required: false
+        default: ''
+        
+jobs:
+  contributors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: wow-actions/contributors-list@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          round: false
+          includeBots: true
+          
+  revision:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+    - name: Make revision
+      run: date +%s > last_change
+    - name: Commit files
+      run: |
+        git config --local user.email "hahwul@gmail.com"
+        git config --local user.name "hahwul"
+        git add revision
+        git commit -m "Update revision"
+    - name: Push revision
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
