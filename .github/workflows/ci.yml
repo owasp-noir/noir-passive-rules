@@ -8,8 +8,8 @@ on:
       logLevel:
         description: manual run
         required: false
-        default: ''
-        
+        default: ""
+
 jobs:
   contributors:
     runs-on: ubuntu-latest
@@ -19,23 +19,24 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           round: false
           includeBots: true
-          
+
   revision:
     runs-on: ubuntu-latest
+    needs: contributors
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 2
-    - name: Make revision
-      run: date +%s > revision
-    - name: Commit files
-      run: |
-        git config --local user.email "hahwul@gmail.com"
-        git config --local user.name "hahwul"
-        git add revision
-        git commit -m "Update revision"
-    - name: Push revision
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - name: Make revision
+        run: date +%s > revision
+      - name: Commit files
+        run: |
+          git config --local user.email "hahwul@gmail.com"
+          git config --local user.name "hahwul"
+          git add revision
+          git commit -m "Update revision"
+      - name: Push revision
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
