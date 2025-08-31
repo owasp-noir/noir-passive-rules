@@ -35,6 +35,9 @@ jobs:
           git config --local user.name "hahwul"
           git add revision
           git commit -m "Update revision"
+      - name: Pull latest changes
+        run: |
+          git pull --rebase origin ${{ github.ref }}
       - name: Push revision
         uses: ad-m/github-push-action@master
         with:
