@@ -8,13 +8,15 @@ This repository contains YAML-based passive scan rules for OWASP Noir, a securit
 
 ### Bootstrap and Validate the Repository
 - This is a **data repository** containing YAML rule definitions - there is NO traditional build process
+- Install dependencies: `pip install -r requirements.txt`
 - Validate YAML syntax: `yamllint -c .github/yamllint.yml secrets/*.yaml` -- takes < 1 second, NEVER needs timeout
+- Validate Schema: `python3 .github/scripts/validate_rules.py`
 - Check all secret rule files: `ls -la secrets/` (should show 13 .yaml files)
 - **CRITICAL**: Always ensure YAML files end with exactly one newline character or yamllint will fail
 
 ### Development Workflow
-- **ALWAYS** run `yamllint -c .github/yamllint.yml secrets/*.yaml` before committing changes
-- **ALWAYS** run `yamllint -c .github/yamllint.yml <filename>` when creating or modifying individual rule files
+- **ALWAYS** run `yamllint -c .github/yamllint.yml secrets/*.yaml` and `python3 .github/scripts/validate_rules.py` before committing changes
+- **ALWAYS** run `yamllint -c .github/yamllint.yml <filename>` and `python3 .github/scripts/validate_rules.py <filename>` when creating or modifying individual rule files
 - Test rule syntax immediately after making changes: `yamllint -c .github/yamllint.yml secrets/your-file.yaml`
 - **NEVER CANCEL** yamllint commands - they complete in under 1 second
 
@@ -23,7 +25,7 @@ This repository contains YAML-based passive scan rules for OWASP Noir, a securit
 - Edit the rule following the YAML schema shown in existing files
 - **REQUIRED fields**: id, info (name, author, severity, description, reference), matchers-condition, matchers, category, techs
 - **ALWAYS** end files with exactly one newline character
-- Validate immediately: `yamllint -c .github/yamllint.yml secrets/new-rule.yaml`
+- Validate immediately: `yamllint -c .github/yamllint.yml secrets/new-rule.yaml` and `python3 .github/scripts/validate_rules.py secrets/new-rule.yaml`
 
 ### Modifying Existing Rules
 - Edit files directly in the `secrets/` directory
@@ -34,34 +36,48 @@ This repository contains YAML-based passive scan rules for OWASP Noir, a securit
 
 **ALWAYS run these validation steps after making any changes:**
 
-1. **Basic YAML Syntax Validation**:
+1. **Schema Validation**:
+   ```bash
+   pip install -r requirements.txt
+   python3 .github/scripts/validate_rules.py
+   ```
+   Expected: "All files passed validation!", exit code 0
+
+2. **Basic YAML Syntax Validation**:
    ```bash
    yamllint -c .github/yamllint.yml secrets/*.yaml
    ```
    Expected: No output, exit code 0
 
-2. **Individual File Validation**:
+3. **Individual File Validation**:
    ```bash
    yamllint -c .github/yamllint.yml secrets/your-modified-file.yaml
    ```
    Expected: No output, exit code 0
 
-3. **Test New Rule Creation**:
+4. **Test New Rule Creation**:
    ```bash
    # Create a test rule
    cp secrets/github-token.yaml /tmp/test-rule.yaml
    # Modify it (change id, patterns, etc.)
    # Validate it
    yamllint -c .github/yamllint.yml /tmp/test-rule.yaml
+   python3 .github/scripts/validate_rules.py /tmp/test-rule.yaml
    ```
 
-4. **Test Error Detection**:
+5. **Test Error Detection**:
    ```bash
    # Create invalid YAML to ensure linting catches errors
    echo "    - bad indentation" >> /tmp/bad-file.yaml
    yamllint -c .github/yamllint.yml /tmp/bad-file.yaml
+
+   # Create invalid Schema to ensure validation catches errors
+   cp secrets/github-token.yaml /tmp/bad-schema.yaml
+   # Remove a required field
+   sed -i '/id:/d' /tmp/bad-schema.yaml
+   python3 .github/scripts/validate_rules.py /tmp/bad-schema.yaml
    ```
-   Expected: Syntax error reported, exit code 1
+   Expected: Error reported, exit code 1
 
 ## CI/CD Workflows
 
@@ -133,9 +149,11 @@ cat secrets/github-token.yaml
 
 # Validate all rules
 yamllint -c .github/yamllint.yml secrets/*.yaml
+python3 .github/scripts/validate_rules.py
 
 # Validate specific rule
 yamllint -c .github/yamllint.yml secrets/aws-access-key.yaml
+python3 .github/scripts/validate_rules.py secrets/aws-access-key.yaml
 ```
 
 ## Key Points for Agents
