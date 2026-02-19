@@ -8,9 +8,16 @@ on:
       logLevel:
         description: manual run
         required: false
-        default: ""
-
+        default: ''
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+      - name: Run secret rule specs
+        run: crystal spec/secrets_spec.cr
   contributors:
     runs-on: ubuntu-latest
     steps:
@@ -19,7 +26,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           round: false
           includeBots: true
-
   revision:
     runs-on: ubuntu-latest
     needs: contributors
