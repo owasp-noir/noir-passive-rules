@@ -132,6 +132,66 @@ module FakeSecrets
   def self.end_ec_private_key
     "-----END " + "EC PRIVATE KEY-----"
   end
+
+  def self.slack_bot_token
+    "xox" + "b-" + "1234567890" + "AbCdEfGhIjKlMnOpQrSt"
+  end
+
+  def self.slack_app_token
+    "xa" + "pp-" + "1-" + "ABC123-" + "1234567890123-" + "a" * 64
+  end
+
+  def self.anthropic_key
+    "sk" + "-ant-" + "api03-" + "A" * 95
+  end
+
+  def self.sendgrid_key
+    "SG" + "." + "A" * 22 + "." + "B" * 43
+  end
+
+  def self.twilio_account_sid
+    "AC" + "abcdef0123456789abcdef0123456789"
+  end
+
+  def self.twilio_api_key_sid
+    "SK" + "0123456789abcdef0123456789abcdef"
+  end
+
+  def self.npm_token
+    "npm" + "_" + "A" * 36
+  end
+
+  def self.azure_storage_connection
+    "DefaultEndpointsProtocol=https;AccountName=devstoreacct;AccountKey=" + "A" * 86 + "=="
+  end
+
+  def self.digitalocean_token
+    "dop" + "_v1_" + "0123456789abcdef" * 4
+  end
+
+  def self.shopify_token
+    "shp" + "at_" + "0123456789abcdef0123456789abcdef"
+  end
+
+  def self.telegram_bot_token
+    "1234567890" + ":AA" + "A" * 33
+  end
+
+  def self.mongodb_srv_connection
+    "mongo" + "db+srv://" + "admin:secret@cluster0.abcde.mongodb.net/test"
+  end
+
+  def self.mongodb_connection
+    "mongo" + "db://" + "user:pass@db.example.com:27017/prod"
+  end
+
+  def self.vault_token
+    "hv" + "s." + "A" * 30
+  end
+
+  def self.google_oauth_secret
+    "GOC" + "SPX-" + "A" * 28
+  end
 end
 
 describe "Passive Secret Rules" do
@@ -651,6 +711,298 @@ describe "Passive Secret Rules" do
 
     it "does not match unrelated text" do
       rule.match?("Grok is an AI assistant by xAI").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # slack-token
+  # ---------------------------------------------------------------------------
+  describe "slack-token" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "slack-token.yaml"))
+
+    it "matches SLACK_TOKEN keyword" do
+      rule.match?("export " + "SLACK" + "_TOKEN=something").should be_true
+    end
+
+    it "matches SLACK_BOT_TOKEN keyword" do
+      rule.match?("SLACK" + "_BOT_TOKEN=something").should be_true
+    end
+
+    it "matches xoxb- bot token regex" do
+      rule.match?(FakeSecrets.slack_bot_token).should be_true
+    end
+
+    it "matches xapp- app-level token regex" do
+      rule.match?(FakeSecrets.slack_app_token).should be_true
+    end
+
+    it "does not match xoxd- prefix (invalid type)" do
+      rule.match?("xox" + "d-not-a-real-token").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("Slack is a messaging platform").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # anthropic-api-key
+  # ---------------------------------------------------------------------------
+  describe "anthropic-api-key" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "anthropic-api-key.yaml"))
+
+    it "matches ANTHROPIC_API_KEY keyword" do
+      rule.match?("export " + "ANTHROPIC" + "_API_KEY=something").should be_true
+    end
+
+    it "matches CLAUDE_API_KEY keyword" do
+      rule.match?("CLAUDE" + "_API_KEY=something").should be_true
+    end
+
+    it "matches sk-ant-api03 key regex" do
+      rule.match?(FakeSecrets.anthropic_key).should be_true
+    end
+
+    it "does not match sk- with too few characters" do
+      rule.match?("sk" + "-ant-short").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("Anthropic builds Claude").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # sendgrid-api-key
+  # ---------------------------------------------------------------------------
+  describe "sendgrid-api-key" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "sendgrid-api-key.yaml"))
+
+    it "matches SENDGRID_API_KEY keyword" do
+      rule.match?("export " + "SENDGRID" + "_API_KEY=something").should be_true
+    end
+
+    it "matches SG. key regex" do
+      rule.match?(FakeSecrets.sendgrid_key).should be_true
+    end
+
+    it "does not match SG. with too few characters" do
+      rule.match?("SG" + ".short.key").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("SendGrid delivers email").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # twilio-api-key
+  # ---------------------------------------------------------------------------
+  describe "twilio-api-key" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "twilio-api-key.yaml"))
+
+    it "matches TWILIO_AUTH_TOKEN keyword" do
+      rule.match?("TWILIO" + "_AUTH_TOKEN=something").should be_true
+    end
+
+    it "matches Account SID regex" do
+      rule.match?(FakeSecrets.twilio_account_sid).should be_true
+    end
+
+    it "matches API Key SID regex" do
+      rule.match?(FakeSecrets.twilio_api_key_sid).should be_true
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("Twilio sends SMS messages").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # npm-access-token
+  # ---------------------------------------------------------------------------
+  describe "npm-access-token" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "npm-access-token.yaml"))
+
+    it "matches NPM_TOKEN keyword" do
+      rule.match?("NPM" + "_TOKEN=something").should be_true
+    end
+
+    it "matches NODE_AUTH_TOKEN keyword" do
+      rule.match?("NODE" + "_AUTH_TOKEN=something").should be_true
+    end
+
+    it "matches npm_ access token regex" do
+      rule.match?(FakeSecrets.npm_token).should be_true
+    end
+
+    it "does not match npm install command" do
+      rule.match?("npm install express").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("Node package manager registry").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # azure-storage-key
+  # ---------------------------------------------------------------------------
+  describe "azure-storage-key" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "azure-storage-key.yaml"))
+
+    it "matches AZURE_STORAGE_CONNECTION_STRING keyword" do
+      rule.match?("AZURE" + "_STORAGE_CONNECTION_STRING=something").should be_true
+    end
+
+    it "matches AccountKey connection string regex" do
+      rule.match?(FakeSecrets.azure_storage_connection).should be_true
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("Azure Blob Storage documentation").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # digitalocean-token
+  # ---------------------------------------------------------------------------
+  describe "digitalocean-token" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "digitalocean-token.yaml"))
+
+    it "matches DIGITALOCEAN_TOKEN keyword" do
+      rule.match?("DIGITALOCEAN" + "_TOKEN=something").should be_true
+    end
+
+    it "matches dop_v1_ personal access token regex" do
+      rule.match?(FakeSecrets.digitalocean_token).should be_true
+    end
+
+    it "does not match dop_v1_ with too few characters" do
+      rule.match?("dop" + "_v1_short").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("DigitalOcean provides droplets").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # shopify-token
+  # ---------------------------------------------------------------------------
+  describe "shopify-token" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "shopify-token.yaml"))
+
+    it "matches SHOPIFY_TOKEN keyword" do
+      rule.match?("SHOPIFY" + "_TOKEN=something").should be_true
+    end
+
+    it "matches shpat_ admin access token regex" do
+      rule.match?(FakeSecrets.shopify_token).should be_true
+    end
+
+    it "does not match shpat_ with too few characters" do
+      rule.match?("shp" + "at_short").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("Shopify powers online stores").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # telegram-bot-token
+  # ---------------------------------------------------------------------------
+  describe "telegram-bot-token" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "telegram-bot-token.yaml"))
+
+    it "matches TELEGRAM_BOT_TOKEN keyword" do
+      rule.match?("TELEGRAM" + "_BOT_TOKEN=something").should be_true
+    end
+
+    it "matches bot token regex" do
+      rule.match?(FakeSecrets.telegram_bot_token).should be_true
+    end
+
+    it "does not match a host:port string" do
+      rule.match?("server 8080:8443 listening").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("Telegram is a chat app").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # mongodb-connection-string
+  # ---------------------------------------------------------------------------
+  describe "mongodb-connection-string" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "mongodb-connection-string.yaml"))
+
+    it "matches MONGODB_URI keyword" do
+      rule.match?("MONGODB" + "_URI=something").should be_true
+    end
+
+    it "matches mongodb+srv:// connection string regex" do
+      rule.match?(FakeSecrets.mongodb_srv_connection).should be_true
+    end
+
+    it "matches mongodb:// connection string regex" do
+      rule.match?(FakeSecrets.mongodb_connection).should be_true
+    end
+
+    it "does not match mongodb:// without credentials" do
+      rule.match?("mongo" + "db://localhost:27017/test").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("MongoDB is a document database").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # hashicorp-vault-token
+  # ---------------------------------------------------------------------------
+  describe "hashicorp-vault-token" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "hashicorp-vault-token.yaml"))
+
+    it "matches VAULT_TOKEN keyword" do
+      rule.match?("VAULT" + "_TOKEN=something").should be_true
+    end
+
+    it "matches hvs. service token regex" do
+      rule.match?(FakeSecrets.vault_token).should be_true
+    end
+
+    it "does not match hvs. with too few characters" do
+      rule.match?("hv" + "s.short").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("HashiCorp Vault stores secrets").should be_false
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # google-oauth-client-secret
+  # ---------------------------------------------------------------------------
+  describe "google-oauth-client-secret" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "google-oauth-client-secret.yaml"))
+
+    it "matches GOOGLE_CLIENT_SECRET keyword" do
+      rule.match?("GOOGLE" + "_CLIENT_SECRET=something").should be_true
+    end
+
+    it "matches GOCSPX- client secret regex" do
+      rule.match?(FakeSecrets.google_oauth_secret).should be_true
+    end
+
+    it "does not match GOCSPX- with too few characters" do
+      rule.match?("GOC" + "SPX-short").should be_false
+    end
+
+    it "does not match unrelated text" do
+      rule.match?("Google OAuth consent screen").should be_false
     end
   end
 
