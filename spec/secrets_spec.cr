@@ -261,6 +261,34 @@ describe "Passive Secret Rules" do
     it "does not match partial keyword" do
       rule.match?("MY_CUSTOM_KEY=hello").should be_false
     end
+
+    it "matches lowercase credentials-file access key id" do
+      rule.match?("aws_access" + "_key_id = " + FakeSecrets.aws_access_key_id).should be_true
+    end
+
+    it "matches lowercase credentials-file secret access key" do
+      rule.match?("aws_secret" + "_access_key = " + FakeSecrets.aws_secret_access_key).should be_true
+    end
+
+    it "matches bare AKIA key id" do
+      rule.match?("k = \"" + FakeSecrets.aws_access_key_id + "\"").should be_true
+    end
+
+    it "matches bare ASIA temporary key id" do
+      rule.match?("ASI" + "AIOSFODNN7EXAMPLE").should be_true
+    end
+
+    it "does not match lowercase env lookup" do
+      rule.match?("os.getenv(\"aws_access" + "_key_id\")").should be_false
+    end
+
+    it "does not match key id embedded in a longer token" do
+      rule.match?("X" + FakeSecrets.aws_access_key_id + "X").should be_false
+    end
+
+    it "does not match too-short key id" do
+      rule.match?("AKI" + "AIOSFODNN7").should be_false
+    end
   end
 
   # ---------------------------------------------------------------------------
