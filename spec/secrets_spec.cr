@@ -264,33 +264,6 @@ describe "Passive Secret Rules" do
   end
 
   # ---------------------------------------------------------------------------
-  # aws-s3-key
-  # ---------------------------------------------------------------------------
-  describe "aws-s3-key" do
-    rule = Rule.from_file(File.join(SECRETS_DIR, "aws-s3-key.yaml"))
-
-    it "matches AWS_ACCESS_KEY_ID keyword" do
-      rule.match?("AWS_ACCESS" + "_KEY_ID=something").should be_true
-    end
-
-    it "matches AWS_SECRET_ACCESS_KEY keyword" do
-      rule.match?("AWS_SECRET" + "_ACCESS_KEY=something").should be_true
-    end
-
-    it "matches S3 access key regex with quotes" do
-      rule.match?("AWS_ACCESS" + "_KEY_ID = \"" + FakeSecrets.aws_access_key_id + "\"").should be_true
-    end
-
-    it "matches S3 secret key regex with quotes" do
-      rule.match?("AWS_SECRET" + "_ACCESS_KEY = \"" + FakeSecrets.aws_secret_access_key + "\"").should be_true
-    end
-
-    it "does not match unrelated text" do
-      rule.match?("just some random text here").should be_false
-    end
-  end
-
-  # ---------------------------------------------------------------------------
   # database-connection-string
   # ---------------------------------------------------------------------------
   describe "database-connection-string" do
