@@ -1058,6 +1058,210 @@ describe "Passive Secret Rules" do
   # ---------------------------------------------------------------------------
   # Cross-rule: ensure no false positive overlap on benign strings
   # ---------------------------------------------------------------------------
+
+  # ---------------------------------------------------------------------------
+  # Additional formats
+  # ---------------------------------------------------------------------------
+  describe "jwt-token (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "jwt-token.yaml"))
+
+    it "matches JWT" do
+      rule.match?("ey" + "JhbGciOiJIUzI1NiJ9." + "ey" + "JzdWIiOiIxMjM0NTY3ODkwIn0." + "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c").should be_true
+    end
+
+    it "does not match JWT-like header only" do
+      rule.match?("eyJhbGciOiJIUzI1NiJ9").should be_false
+    end
+  end
+
+  describe "stripe-test-key (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "stripe-test-key.yaml"))
+
+    it "matches sk_test key" do
+      rule.match?("sk" + "_test_" + "a1B2c3D4e5F6g7H8i9J0k1L2").should be_true
+    end
+
+    it "does not match short sk_test" do
+      rule.match?("sk" + "_test_" + "abc").should be_false
+    end
+  end
+
+  describe "stripe-webhook-secret (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "stripe-webhook-secret.yaml"))
+
+    it "matches whsec secret" do
+      rule.match?("wh" + "sec_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6").should be_true
+    end
+
+    it "does not match short whsec" do
+      rule.match?("wh" + "sec_abc").should be_false
+    end
+  end
+
+  describe "azure-ad-client-secret (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "azure-ad-client-secret.yaml"))
+
+    it "matches client secret" do
+      rule.match?("abc" + "8Q~" + "aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456").should be_true
+    end
+
+    it "does not match tilde text" do
+      rule.match?("use ~ for home").should be_false
+    end
+  end
+
+  describe "azure-sas-token (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "azure-sas-token.yaml"))
+
+    it "matches SAS URL" do
+      rule.match?("https://acct.blob.core.windows.net/c?" + "sv=2021-06-08&ss=b&sp=r&se=2026-01-01&" + "sig=" + "aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcd%3D").should be_true
+    end
+
+    it "does not match URL without sig" do
+      rule.match?("https://acct.blob.core.windows.net/c?sv=2021-06-08&comp=list").should be_false
+    end
+  end
+
+  describe "huggingface-token (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "huggingface-token.yaml"))
+
+    it "matches hf token" do
+      rule.match?("h" + "f_" + "aBcDeFgHiJkLmNoPqRsTuVwXyZ01234567").should be_true
+    end
+
+    it "does not match short hf_" do
+      rule.match?("hf_model_name").should be_false
+    end
+  end
+
+  describe "pypi-token (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "pypi-token.yaml"))
+
+    it "matches pypi token" do
+      rule.match?("py" + "pi-AgEIcHlwaS5vcmc" + "a" * 60).should be_true
+    end
+
+    it "does not match pypi word" do
+      rule.match?("pip install pypi-server").should be_false
+    end
+  end
+
+  describe "age-secret-key (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "age-secret-key.yaml"))
+
+    it "matches age key 58" do
+      rule.match?("AGE-SECRET" + "-KEY-1" + ("QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L" * 2)[0, 58]).should be_true
+    end
+
+    it "does not match age public key" do
+      rule.match?("age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p").should be_false
+    end
+  end
+
+  describe "sentry-dsn (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "sentry-dsn.yaml"))
+
+    it "matches DSN" do
+      rule.match?("https://" + "0123456789abcdef0123456789abcdef" + "@o12345.ingest.sentry.io/12345").should be_true
+    end
+
+    it "does not match sentry docs URL" do
+      rule.match?("https://docs.sentry.io/platforms/").should be_false
+    end
+  end
+
+  describe "grafana-token (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "grafana-token.yaml"))
+
+    it "matches glsa token" do
+      rule.match?("gl" + "sa_" + "aBcDeFgHiJkLmNoPqRsTuVwXyZ012345" + "_0123abcd").should be_true
+    end
+
+    it "matches glc token" do
+      rule.match?("gl" + "c_" + "aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789+/").should be_true
+    end
+
+    it "does not match glsa prefix only" do
+      rule.match?("glsa_short").should be_false
+    end
+  end
+
+  describe "atlassian-token (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "atlassian-token.yaml"))
+
+    it "matches ATATT token" do
+      rule.match?("ATA" + "TT3" + "xFfGF0" + "a" * 180).should be_true
+    end
+
+    it "does not match short ATATT" do
+      rule.match?("ATATT3abc").should be_false
+    end
+  end
+
+  describe "mailgun-api-key (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "mailgun-api-key.yaml"))
+
+    it "matches mailgun key" do
+      rule.match?("ke" + "y-" + "0123456789abcdef0123456789abcdef").should be_true
+    end
+
+    it "does not match primary-key text" do
+      rule.match?("primary-key-0123456789abcdef0123456789abcdef0").should be_false
+    end
+  end
+
+  describe "datadog-api-key (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "datadog-api-key.yaml"))
+
+    it "matches DD_API_KEY" do
+      rule.match?("DD_API" + "_KEY=" + "0123456789abcdef0123456789abcdef").should be_true
+    end
+
+    it "matches DD_APP_KEY" do
+      rule.match?("DD_APP" + "_KEY: " + "0123456789abcdef0123456789abcdef01234567").should be_true
+    end
+
+    it "does not match env lookup" do
+      rule.match?("api_key = os.environ[\"DD_API_KEY\"]").should be_false
+    end
+  end
+
+  describe "discord-bot-token (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "discord-bot-token.yaml"))
+
+    it "matches bot token" do
+      rule.match?("M" + "TIzNDU2Nzg5MDEyMzQ1Njc4" + "." + "GaBcDe" + "." + "aBcDeFgHiJkLmNoPqRsTuVwXyZ01234").should be_true
+    end
+
+    it "does not match dotted version" do
+      rule.match?("v1.2.3").should be_false
+    end
+  end
+
+  describe "openai-api-key (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "openai-api-key.yaml"))
+
+    it "matches svcacct key" do
+      rule.match?("sk" + "-svcacct-" + "a" * 30 + "T3Blbk" + "FJ" + "b" * 30).should be_true
+    end
+  end
+
+  describe "webhook-slack (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "webhook-slack.yaml"))
+
+    it "matches workflow webhook" do
+      rule.match?("https://hooks" + ".slack.com/workflows/" + "T01ABCDEFGH/A01ABCDEFGH/123456789012345678/" + "aBcDeFgHiJkLmNoPqRsTuVwX").should be_true
+    end
+  end
+
+  describe "gitlab-token (formats)" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "gitlab-token.yaml"))
+
+    it "matches runner token" do
+      rule.match?("gl" + "rt-" + "aBcDeFgHiJkLmNoPqRsT").should be_true
+    end
+  end
+
   describe "Cross-rule false positive checks" do
     all_rules = Dir.glob(File.join(SECRETS_DIR, "*.yaml")).map { |f| Rule.from_file(f) }
 
