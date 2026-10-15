@@ -511,8 +511,24 @@ describe "Passive Secret Rules" do
   describe "private-key" do
     rule = Rule.from_file(File.join(SECRETS_DIR, "private-key.yaml"))
 
-    it "matches PRIVATE_KEY keyword" do
-      rule.match?("PRIVATE" + "_KEY=something").should be_true
+    it "does not match bare PRIVATE_KEY name" do
+      rule.match?("\"LABEL_PRIVATE" + "_KEY\": \"Enter Private Key\"").should be_false
+    end
+
+    it "does not match interpolated PRIVATE_KEY value" do
+      rule.match?("puts \"VAPID_PRIVATE" + "_KEY=\#{key.private_key}\"").should be_false
+    end
+
+    it "matches ENCRYPTED PRIVATE KEY marker" do
+      rule.match?("-----BEGIN " + "ENCRYPTED PRIVATE KEY-----").should be_true
+    end
+
+    it "matches PGP private key block marker" do
+      rule.match?("-----BEGIN " + "PGP PRIVATE KEY BLOCK-----").should be_true
+    end
+
+    it "does not match PGP public key block" do
+      rule.match?("-----BEGIN " + "PGP PUBLIC KEY BLOCK-----").should be_false
     end
 
     it "matches BEGIN PRIVATE KEY marker" do
@@ -520,7 +536,7 @@ describe "Passive Secret Rules" do
     end
 
     it "matches PRIVATE_KEY assignment regex" do
-      rule.match?("PRIVATE" + "_KEY = 'my_secret_key_value'").should be_true
+      rule.match?("PRIVATE" + "_KEY = 'my_secret_key_value_1234'").should be_true
     end
 
     it "matches full PEM private key block" do
@@ -561,12 +577,12 @@ describe "Passive Secret Rules" do
       rule.match?(key).should be_true
     end
 
-    pending "matches full DSA private key block" do
+    it "matches full DSA private key block" do
       key = FakeSecrets.begin_dsa_private_key + "\nMIIBuwIBAAKBgQD...\n" + FakeSecrets.end_dsa_private_key
       rule.match?(key).should be_true
     end
 
-    pending "matches full EC private key block" do
+    it "matches full EC private key block" do
       key = FakeSecrets.begin_ec_private_key + "\nMHQCAQEEIBkg...\n" + FakeSecrets.end_ec_private_key
       rule.match?(key).should be_true
     end
