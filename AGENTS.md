@@ -263,6 +263,10 @@ The YAML structure and regex validity tests are **automatically applied to all r
 
 Runs `yamllint` against all `secrets/*.yaml` files.
 
+### On Pull Request (`.github/workflows/spec.yml`)
+
+Runs `crystal spec/secrets_spec.cr`.
+
 ## Checklist for New Patterns
 
 Use this checklist every time you add or modify a rule:
