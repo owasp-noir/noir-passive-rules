@@ -297,20 +297,40 @@ describe "Passive Secret Rules" do
   describe "database-connection-string" do
     rule = Rule.from_file(File.join(SECRETS_DIR, "database-connection-string.yaml"))
 
-    it "matches DATABASE_URL keyword" do
-      rule.match?("DATABASE" + "_URL=postgres://localhost/mydb").should be_true
-    end
-
-    it "matches DB_CONNECTION_STRING keyword" do
-      rule.match?("DB_CONNECTION" + "_STRING=something").should be_true
-    end
-
-    it "matches MYSQL_URL keyword" do
-      rule.match?("export MYSQL" + "_URL=mysql://root@localhost").should be_true
-    end
-
     it "matches mysql:// connection string regex" do
       rule.match?(FakeSecrets.mysql_connection).should be_true
+    end
+
+    it "matches postgres URL without port" do
+      rule.match?("u = \"post" + "gres://admin:S3cretPw@db.example.com/app\"").should be_true
+    end
+
+    it "matches postgresql URL" do
+      rule.match?("post" + "gresql://admin:S3cretPw@db.example.com:5432/app").should be_true
+    end
+
+    it "matches mysql URL with symbols in password and no port" do
+      rule.match?("my" + "sql://root:p%40ss-w0rd!@db.example.com/app").should be_true
+    end
+
+    it "matches redis URL with password only" do
+      rule.match?("red" + "is://:S3cretPw@cache.example.com:6379/0").should be_true
+    end
+
+    it "matches amqp URL" do
+      rule.match?("am" + "qp://user:S3cretPw@mq.example.com:5672/").should be_true
+    end
+
+    it "does not match name-only DATABASE_URL" do
+      rule.match?("DATABASE" + "_URL: PostgresDsn").should be_false
+    end
+
+    it "does not match ${VAR} password placeholder" do
+      rule.match?("DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432/app").should be_false
+    end
+
+    it "does not match URL without credentials" do
+      rule.match?("jdbc:mysql://localhost/petclinic").should be_false
     end
 
     it "does not match unrelated text" do
@@ -318,7 +338,7 @@ describe "Passive Secret Rules" do
     end
 
     it "does not match http URLs" do
-      rule.match?("http://example.com/api/v1").should be_false
+      rule.match?("http://user:pw@example.com/api/v1").should be_false
     end
   end
 
