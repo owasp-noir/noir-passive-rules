@@ -68,6 +68,12 @@ techs: ['*']
 | `category` | Always `secret` |
 | `techs` | Always `['*']` for language-agnostic rules |
 
+### Severity Guidelines
+
+- `critical`: credentials that grant account, cloud, repository or publishing access (API keys, PATs, private keys, bot tokens).
+- `high`: scoped or write-only secrets (webhooks, OAuth client secrets, credentialed DB URLs).
+- `low`: non-secret but sensitive material (public keys).
+
 ### Matcher Types
 
 - **`word`** — Exact substring match. Use for environment variable names, fixed prefixes, and URL stems.
