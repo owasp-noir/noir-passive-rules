@@ -54,7 +54,13 @@ struct Rule
   end
 
   # Check if the given text matches the rule (evaluates all matchers with the top-level condition)
+  # noir evaluates rules one line at a time, so a rule matches only if a
+  # single line satisfies it.
   def match?(text : String) : Bool
+    text.each_line.any? { |line| match_line?(line) }
+  end
+
+  def match_line?(text : String) : Bool
     results = matchers.map { |m| m.match?(text) }
 
     case matchers_condition
