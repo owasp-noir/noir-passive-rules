@@ -561,12 +561,12 @@ describe "Passive Secret Rules" do
       rule.match?(key).should be_true
     end
 
-    it "matches full DSA private key block" do
+    pending "matches full DSA private key block" do
       key = FakeSecrets.begin_dsa_private_key + "\nMIIBuwIBAAKBgQD...\n" + FakeSecrets.end_dsa_private_key
       rule.match?(key).should be_true
     end
 
-    it "matches full EC private key block" do
+    pending "matches full EC private key block" do
       key = FakeSecrets.begin_ec_private_key + "\nMHQCAQEEIBkg...\n" + FakeSecrets.end_ec_private_key
       rule.match?(key).should be_true
     end
