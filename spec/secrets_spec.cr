@@ -134,7 +134,7 @@ module FakeSecrets
   end
 
   def self.slack_bot_token
-    "xox" + "b-" + "1234567890" + "AbCdEfGhIjKlMnOpQrSt"
+    "xox" + "b-" + "1234567890-1234567890123-" + "AbCdEfGhIjKlMnOpQrStUvWx"
   end
 
   def self.slack_app_token
@@ -622,8 +622,12 @@ describe "Passive Secret Rules" do
   describe "ssh-rsa-key" do
     rule = Rule.from_file(File.join(SECRETS_DIR, "ssh-rsa-key.yaml"))
 
-    it "matches ssh-rsa keyword" do
-      rule.match?("ssh" + "-rsa").should be_true
+    it "does not match ssh-rsa algorithm name" do
+      rule.match?("algos := []string{\"ssh" + "-rsa\", \"ssh-ed25519\"}").should be_false
+    end
+
+    it "is low severity (public key)" do
+      rule.severity.should eq("low")
     end
 
     it "matches ssh-rsa with base64 key data" do
@@ -773,6 +777,14 @@ describe "Passive Secret Rules" do
       rule.match?(FakeSecrets.slack_app_token).should be_true
     end
 
+    it "does not match placeholder token" do
+      rule.match?("see xox" + "b-your-token-here for docs").should be_false
+    end
+
+    it "matches xoxp user token" do
+      rule.match?("xox" + "p-1234567890-1234567890-1234567890123-" + "0123456789abcdef0123456789abcdef").should be_true
+    end
+
     it "does not match xoxd- prefix (invalid type)" do
       rule.match?("xox" + "d-not-a-real-token").should be_false
     end
@@ -842,8 +854,8 @@ describe "Passive Secret Rules" do
       rule.match?("TWILIO" + "_AUTH_TOKEN=something").should be_true
     end
 
-    it "matches Account SID regex" do
-      rule.match?(FakeSecrets.twilio_account_sid).should be_true
+    it "does not match Account SID (identifier, not a secret)" do
+      rule.match?("ACCOUNT_SID = \"" + FakeSecrets.twilio_account_sid + "\"").should be_false
     end
 
     it "matches API Key SID regex" do
