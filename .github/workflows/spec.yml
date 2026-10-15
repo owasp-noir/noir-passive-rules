@@ -1,0 +1,14 @@
+---
+name: Spec
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+      - name: Run secret rule specs
+        run: crystal spec/secrets_spec.cr
