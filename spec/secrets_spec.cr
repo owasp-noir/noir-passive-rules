@@ -65,6 +65,26 @@ module FakeSecrets
     "sk" + "_test_" + "ABCDEFGHIJKLMNOPQRSTUVWX"
   end
 
+  def self.toss_sk_live
+    "live" + "_sk_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4"
+  end
+
+  def self.toss_gsk_live
+    "live" + "_gsk_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6"
+  end
+
+  def self.toss_sk_test
+    "test" + "_sk_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4"
+  end
+
+  def self.toss_gsk_test
+    "test" + "_gsk_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6"
+  end
+
+  def self.toss_gsk_docs
+    "test" + "_gsk_" + "docs_" + "a1B2c3D4e5F6g7H8i9J0k1L2"
+  end
+
   def self.xai_key
     "xai" + "-" + "A" * 88
   end
@@ -1083,6 +1103,63 @@ describe "Passive Secret Rules" do
 
     it "does not match short sk_test" do
       rule.match?("sk" + "_test_" + "abc").should be_false
+    end
+  end
+
+  describe "tosspayments-secret-key" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "tosspayments-secret-key.yaml"))
+
+    it "matches a live secret key" do
+      rule.match?(FakeSecrets.toss_sk_live).should be_true
+    end
+
+    it "matches a live secret key for the payment widget (gsk)" do
+      rule.match?("const secretKey = '#{FakeSecrets.toss_gsk_live}';").should be_true
+    end
+
+    it "does not match test secret keys" do
+      rule.match?(FakeSecrets.toss_sk_test).should be_false
+      rule.match?(FakeSecrets.toss_gsk_test).should be_false
+    end
+
+    # Client keys are meant to be embedded in the browser.
+    it "does not match live client keys" do
+      rule.match?("live" + "_ck_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4").should be_false
+      rule.match?("live" + "_gck_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6").should be_false
+    end
+
+    it "does not match a short value or a longer identifier ending in the prefix" do
+      rule.match?("live" + "_sk_" + "abc").should be_false
+      rule.match?("is_alive" + "_sk_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4").should be_false
+    end
+  end
+
+  describe "tosspayments-test-key" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "tosspayments-test-key.yaml"))
+
+    it "matches a test secret key" do
+      rule.match?(FakeSecrets.toss_sk_test).should be_true
+    end
+
+    it "matches a test secret key for the payment widget (gsk)" do
+      rule.match?(FakeSecrets.toss_gsk_test).should be_true
+    end
+
+    it "matches the shared key from the documentation" do
+      rule.match?(FakeSecrets.toss_gsk_docs).should be_true
+    end
+
+    it "does not match live secret keys" do
+      rule.match?(FakeSecrets.toss_sk_live).should be_false
+    end
+
+    it "does not match test client keys" do
+      rule.match?("test" + "_ck_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4").should be_false
+      rule.match?("test" + "_gck_" + "docs_" + "a1B2c3D4e5F6g7H8i9J0k1L2").should be_false
+    end
+
+    it "does not match a short value" do
+      rule.match?("test" + "_sk_" + "abc").should be_false
     end
   end
 
