@@ -213,6 +213,10 @@ module FakeSecrets
     "GOC" + "SPX-" + "A" * 28
   end
 
+  def self.upstage_key
+    "up" + "_" + "A1b2" * 7 + "Z"
+  end
+
   def self.clova_studio_api_key
     "nv-" + "A1" * 20
   end
@@ -1107,6 +1111,38 @@ describe "Passive Secret Rules" do
 
     it "does not match short sk_test" do
       rule.match?("sk" + "_test_" + "abc").should be_false
+    end
+  end
+
+  describe "upstage-api-key" do
+    rule = Rule.from_file(File.join(SECRETS_DIR, "upstage-api-key.yaml"))
+
+    it "matches a standalone Upstage API key" do
+      rule.match?(FakeSecrets.upstage_key).should be_true
+    end
+
+    it "matches an Upstage API key in an environment variable" do
+      rule.match?("UPSTAGE_API_KEY=#{FakeSecrets.upstage_key}").should be_true
+    end
+
+    it "matches an Upstage API key in an authorization header" do
+      rule.match?("Authorization: Bearer #{FakeSecrets.upstage_key}").should be_true
+    end
+
+    it "does not match a short key" do
+      rule.match?("up" + "_" + "A" * 28).should be_false
+    end
+
+    it "does not match a longer key" do
+      rule.match?("up" + "_" + "A" * 30).should be_false
+    end
+
+    it "does not match an incorrect prefix" do
+      rule.match?("sk" + "_" + "A" * 29).should be_false
+    end
+
+    it "does not match a placeholder" do
+      rule.match?("UPSTAGE_API_KEY=your_api_key_here").should be_false
     end
   end
 
