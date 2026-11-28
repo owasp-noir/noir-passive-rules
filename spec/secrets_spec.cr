@@ -212,6 +212,10 @@ module FakeSecrets
   def self.google_oauth_secret
     "GOC" + "SPX-" + "A" * 28
   end
+
+  def self.clova_studio_api_key
+    "nv-" + "A1" * 20
+  end
 end
 
 describe "Passive Secret Rules" do
@@ -1336,6 +1340,33 @@ describe "Passive Secret Rules" do
 
     it "matches runner token" do
       rule.match?("gl" + "rt-" + "aBcDeFgHiJkLmNoPqRsT").should be_true
+    end
+  end
+
+  describe "naver-clova-studio-api-key" do
+    path = rule_path("naver-clova-studio-api-key.yaml")
+
+    it "detects a key exported under the documented variable name" do
+      File.file?(path).should be_true
+      Rule.from_file(path).match?("export CLOVASTUDIO_API_KEY=\"#{FakeSecrets.clova_studio_api_key}\"").should be_true
+    end
+
+    it "detects an unquoted key with a trailing comment" do
+      Rule.from_file(path).match?("CLOVASTUDIO_API_KEY=#{FakeSecrets.clova_studio_api_key} # configuration").should be_true
+    end
+
+    it "ignores masked values and placeholders" do
+      rule = Rule.from_file(path)
+      rule.match?("CLOVASTUDIO_API_KEY=\"nv-************\"").should be_false
+      rule.match?("CLOVASTUDIO_API_KEY='<CLOVA-STUDIO-API-KEY>'").should be_false
+    end
+
+    it "ignores the prefix without a token" do
+      Rule.from_file(path).match?("CLOVASTUDIO_API_KEY=nv-").should be_false
+    end
+
+    it "ignores keys assigned to an unrelated variable" do
+      Rule.from_file(path).match?("OTHER_API_KEY=#{FakeSecrets.clova_studio_api_key}").should be_false
     end
   end
 
