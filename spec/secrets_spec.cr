@@ -1365,6 +1365,16 @@ describe "Passive Secret Rules" do
       Rule.from_file(path).match?("CLOVASTUDIO_API_KEY=nv-").should be_false
     end
 
+    it "ignores short example keys" do
+      Rule.from_file(path).match?("CLOVASTUDIO_API_KEY=nv-test").should be_false
+    end
+
+    it "requires at least 20 token characters after the prefix" do
+      rule = Rule.from_file(path)
+      rule.match?("CLOVASTUDIO_API_KEY=nv-" + "A" * 19).should be_false
+      rule.match?("CLOVASTUDIO_API_KEY=nv-" + "A" * 20).should be_true
+    end
+
     it "ignores keys assigned to an unrelated variable" do
       Rule.from_file(path).match?("OTHER_API_KEY=#{FakeSecrets.clova_studio_api_key}").should be_false
     end
